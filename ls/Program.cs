@@ -12,12 +12,30 @@ namespace ls
         {
             string workingDirectory = args.Length == 0 ? "." : args[0];
             DirectoryInfo di = new DirectoryInfo(workingDirectory);
-            int maxLength = di.GetFiles().Select(x => x.Name.Length).Max();
-            foreach(var file in di.GetFiles().OrderBy(x=>x.Name))
+
+            int maxLength = di.GetObjects().Select(x => x.Name.Length).Max();
+            foreach(var file in di.GetObjects().OrderBy(x=>x.Name))
             {
-                Console.WriteLine($"{file.Name.PadRight(maxLength)}\t{file.CreationTime}");
+                Console.WriteLine($"{file.Name.PadRight(maxLength)}\t{file.CreateDate}");
             }
+#if DEBUG
             Console.ReadLine();
+#endif
         }
+    }
+
+    public static class ItemListExtensions
+    {
+        public static IEnumerable<FileSystemObject> GetObjects(this DirectoryInfo directoryInfo)
+        {
+            return directoryInfo.GetFiles().Select(x => new FileSystemObject { Name = x.Name, CreateDate = x.CreationTime })
+                .Union(directoryInfo.GetDirectories().Select(x => new FileSystemObject { Name = "+" + x.Name, CreateDate = x.CreationTime }));
+        }
+    }
+
+    public class FileSystemObject
+    {
+        public string Name { get; set; }
+        public DateTime CreateDate { get; set; }
     }
 }
